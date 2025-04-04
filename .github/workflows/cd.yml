@@ -31,20 +31,25 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Install dependencies and build
-        run: |
-          pnpm install
-          pnpm run build
-
       - name: Set Env
         run: |
           touch .env
           echo "NODE_ENV=${{ vars.NODE_ENV }}" >> .env
           echo "DATABASE_URL=${{ vars.DATABASE_URL }}" >> .env
+          echo "API_HOST=${{ vars.API_HOST }}" >> .env
 
+      - name: Install dependencies
+        run: |
+          pnpm install
+          
       - name: Database migration
         run: |
           pnpm run run:migration
+          pnpm prisma generate
+      
+      - name: Build
+        run: |
+          pnpm build
 
       - name: Deploy files to remote server
         run: |

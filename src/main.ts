@@ -6,11 +6,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
+
   const config = new DocumentBuilder()
     .setTitle('Api Pantore Pay')
     .setDescription('Api de cadastro de usuários')
     .setVersion('1.0')
-    .addServer('http://localhost:3000', 'Local')
+    .addServer(process.env.API_HOST)
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, documentFactory);
