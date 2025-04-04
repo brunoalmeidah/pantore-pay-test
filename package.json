@@ -20,7 +20,8 @@
     "test:e2e": "dotenv -e .env.test.local -- jest --config ./jest-e2e.json",
     "test:migrate": "dotenv -e .env.test.local -- prisma migrate deploy",
     "run:migration": "prisma migrate deploy",
-    "run:seed" : "prisma db seed"
+    "run:seed" : "prisma db seed",
+    "run:generate": "prisma generate"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

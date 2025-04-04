@@ -16,12 +16,12 @@ jobs:
       - name: Configure pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 9.15.0 # Substitua pela versão desejada do pnpm
+          version: 9.15.0 
 
       - name: Configure Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Substitua pela versão do Node.js do seu projeto
+          node-version: 22
           cache: 'pnpm'
       
       - name: Set SSH Configuration
