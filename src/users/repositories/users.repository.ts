@@ -9,21 +9,19 @@ export class UsersRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(data: Prisma.UserCreateInput): Promise<User> {
-    const { name, email, password, role } = data;
     return this.prismaService.user.create({
-      data: {
-        name,
-        email,
-        password,
-        role,
-      },
+      data,
     });
   }
 
   async findAll(params: FindAllQuery): Promise<User[]> {
     const { page, take, email, name } = params;
     return this.prismaService.user.findMany({
-      where: { email, name: { contains: name }, deletedAt: null },
+      where: {
+        email,
+        name: { contains: name, mode: 'insensitive' },
+        deletedAt: null,
+      },
       skip: (page - 1) * take,
       take: take,
     });
@@ -32,7 +30,12 @@ export class UsersRepository {
   async count(params: FindAllQuery): Promise<number> {
     const { email, name } = params;
     return this.prismaService.user.count({
-      where: { email, name: { contains: name }, deletedAt: null },
+      where: {
+        email,
+        name: { contains: name, mode: 'insensitive' },
+        deletedAt: null,
+      },
+      orderBy: { name: 'asc' },
     });
   }
 

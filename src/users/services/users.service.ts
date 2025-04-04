@@ -34,8 +34,8 @@ export class UsersService {
 
   async findAll(query: FindAllQuery): Promise<FindAllResponse> {
     const { page, take, email, name } = query;
-    const _page = page ?? 1;
-    const _take = take ?? 10;
+    const _page = Number(page ?? 1);
+    const _take = Number(take ?? 10);
     const users = await this.repository.findAll({
       page: _page,
       take: _take,
