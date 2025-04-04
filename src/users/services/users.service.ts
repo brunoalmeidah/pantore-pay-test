@@ -6,6 +6,7 @@ import { User } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { FindAllQuery } from '../types/find-all-query';
 import { FindAllResponse } from '../types/find-all-response';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -68,10 +69,46 @@ export class UsersService {
     if (!user)
       throw new HttpException('Usuário não encontrado', HttpStatus.NOT_FOUND);
 
-    delete updateUserDto.password;
-    const userUpdated = await this.repository.update(id, updateUserDto);
+    const userUpdated = await this.repository.update(id, {
+      ...updateUserDto,
+      password: undefined,
+    });
     delete userUpdated.password;
     return userUpdated;
+  }
+
+  async changePassword(
+    id: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<void> {
+    const user = await this.repository.findOne(id);
+
+    if (!user)
+      throw new HttpException('Usuário não encontrado', HttpStatus.NOT_FOUND);
+
+    if (changePasswordDto.password !== changePasswordDto.confirmPassword) {
+      throw new HttpException(
+        'As senhas não coincidem',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const isNewPasswordSameAsOld = await bcrypt.compare(
+      changePasswordDto.password,
+      user.password,
+    );
+
+    if (isNewPasswordSameAsOld) {
+      throw new HttpException(
+        'A nova senha não pode ser igual a senha atual',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const passwordEncrypted = await bcrypt.hash(changePasswordDto.password, 10);
+    await this.repository.update(id, {
+      password: passwordEncrypted,
+    });
   }
 
   async remove(id: string) {
