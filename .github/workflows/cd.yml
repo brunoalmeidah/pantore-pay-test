@@ -1,0 +1,62 @@
+name: Deploy Nest.js App
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.15.0 # Substitua pela versão desejada do pnpm
+
+      - name: Configure Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22 # Substitua pela versão do Node.js do seu projeto
+          cache: 'pnpm'
+      
+      - name: Set SSH Configuration
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Install dependencies and build
+        run: |
+          pnpm install
+          pnpm run build
+
+      - name: Set Env
+        run: |
+          touch .env
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> .env
+          echo "DATABASE_URL=${{ vars.DATABASE_URL }}" >> .env
+
+      - name: Database migration
+        run: |
+          pnpm run run:migration
+
+      - name: Deploy files to remote server
+        run: |
+          rsync -avzr --exclude 'node_modules' --exclude '.env.example' --exclude '.git' -e "ssh -i ~/.ssh/id_rsa" ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/api
+
+      - name: Install dependencies
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            cd /home/ubuntu/api && pnpm install
+          "
+      - name: Restart pm2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            pm2 restart main
+          "
