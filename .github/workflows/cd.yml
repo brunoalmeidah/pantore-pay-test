@@ -44,8 +44,12 @@ jobs:
           
       - name: Database migration
         run: |
-          pnpm run run:migration
-          pnpm prisma generate
+          pnpm run:migration
+          pnpm run:generate
+
+      - name: Running Unit Tests
+        run: |
+          pnpm test
       
       - name: Build
         run: |
